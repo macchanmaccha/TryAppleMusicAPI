@@ -78,8 +78,8 @@ struct ContentView: View {
                 if previewURL != nil {
                     // ボタンを表示
                     Button(action: {
-                        // 再生と停止のきりかえボタン
-                        togglePlayback()
+                        // 再生
+                        startPlayAndTimer()
                     }) {
                         // isPlayingがtrueのときは停止、falseのときは再生を表示
                         Text(isPlaying ? "停止" : "再生")
@@ -198,7 +198,7 @@ struct ContentView: View {
             // 楽曲情報を検索
             let request = MusicCatalogSearchRequest(
                 // 「チベットボウル」で検索
-                term: "チベットボウル",
+                term: "銀河鉄道999 シンミックス",
                 // 検索する対象はアーティスト、アルバム、ソング
                 types: [
                     Artist.self,
@@ -227,6 +227,7 @@ struct ContentView: View {
             print(previewURL ?? "previewURLが存在しません")
             return
         }
+        print("⭐️previewURLはこちら\(previewURL)")
         // isPlayingがtrueなら
         if isPlaying {
             // ポーズにする
