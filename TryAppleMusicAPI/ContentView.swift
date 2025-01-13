@@ -52,6 +52,8 @@ struct ContentView: View {
     @State private var fadeOutTimer: Timer?
     // fadeOutを修了するタイマー
     @State private var fadeOutEndTimer: Timer?
+    //<iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/jp/album/%E9%8A%80%E6%B2%B3%E9%89%84%E9%81%93999/477643015?i=477643022"></iframe>
+    private let iD: String = "477643022"
     var body: some View {
         VStack {
             // isLoadingがtrueなら
@@ -94,7 +96,7 @@ struct ContentView: View {
                     Button("PreviewURLを取得する") {
                         // fetchPreciewURLを非同期処理
                         Task {
-                            await fetchPreviewURL()
+                            await fetchPreviewURL(for: iD)
                         }
                     }
                     .frame(width: 200, height: 50)
@@ -107,6 +109,7 @@ struct ContentView: View {
         .onAppear {
             stopTimer()
             elapsedTime = Double(selectedTime * 60)
+            print("はじまるよ！")
         } // .onAppear
         .onChange(of: selectedTime) {
             elapsedTime = Double(selectedTime * 60)
@@ -146,7 +149,7 @@ struct ContentView: View {
         updateState(newState: .playing)
         // 0.1秒ずつ刻む
         selectedTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-//            // 現在日時から終了時刻まで0.1秒ずつ引いていく
+            //            // 現在日時から終了時刻まで0.1秒ずつ引いていく
             if let endTime = endTime {
                 elapsedTime = endTime.timeIntervalSince(Date())
             }
@@ -164,7 +167,7 @@ struct ContentView: View {
                 }
             }
         }
-            
+        
     }
     
     func stopTimer() {
@@ -183,8 +186,8 @@ struct ContentView: View {
         }
         state = newState
     }
- // fetchPreviewURL
-    private func fetchPreviewURL() async {
+    //    // fetchPreviewURL
+    func fetchPreviewURL(for trackID: String) async {
         // エラーを出すメソッドを安全に返す(request)
         do {
             // Apple Musicの認証ステータス
@@ -193,38 +196,31 @@ struct ContentView: View {
             guard musicAuthorizationStatus == .authorized else {
                 // 処理終了　なにもしない
                 print("許可されませんでした")
+                // 何も返さず終了
                 return
             }
-            // 楽曲情報を検索
-            let request = MusicCatalogSearchRequest(
-                // 「チベットボウル」で検索
-                term: "銀河鉄道999 シンミックス",
-                // 検索する対象はアーティスト、アルバム、ソング
-                types: [
-                    Artist.self,
-                    Album.self,
-                    Song.self]
-            )
-            // 結果を出す
+            // 楽曲IDを指定してリクエストを作成
+            let request = MusicCatalogResourceRequest<Song>(matching: \.id, equalTo: MusicItemID(trackID))
+            // レスポンスを取得
             let response = try await request.response()
-            print("検索結果\(request)")
-            // トップに出てきたsongを代入
-            if let song = response.songs.first {
-                // songのpreviewURLを取得
-                previewURL = song.previewAssets?.first?.url
+            // 曲とプレビューURLが存在する場合
+            if let song = response.items.first, let previewURL = song.previewAssets?.first?.url {
+                // previewURLに代入
+                self.previewURL = previewURL
             } // if let
-            // エラーが出たら、以下の処理
+            // エラーの場合
         } catch {
-            // プリント文出力
-            print("previewURLの取得失敗: \(error)")
-        } // do catch
-    } // func fetchPreviewURL()
-// 曲を再生したり、停止したりするメソッド
+            print("指定したトラックID（\(trackID)）の曲とpreviewURLがありません")
+            print("エラーはこちら: \(error)")
+            return
+        }
+    } // fetchPreciewURL
+    // 曲を再生したり、停止したりするメソッド
     private func togglePlayback() {
         // previewURLが存在しなかったら何もしない
         guard let previewURL = previewURL else {
             // プレビューURLが存在しなかったらコメント
-            print(previewURL ?? "previewURLが存在しません")
+            print("previewURLが存在しません")
             return
         }
         print("⭐️previewURLはこちら\(previewURL)")
@@ -300,6 +296,7 @@ struct ContentView: View {
             } // if currentStep
         } // Timer
     } // func fadeOut
+    
 } // ContentView
 
 
