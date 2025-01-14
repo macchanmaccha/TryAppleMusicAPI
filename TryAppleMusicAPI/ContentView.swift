@@ -186,7 +186,7 @@ struct ContentView: View {
         }
         state = newState
     }
-    //    // fetchPreviewURL
+    // fetchPreviewURL
     func fetchPreviewURL(for trackID: String) async {
         // エラーを出すメソッドを安全に返す(request)
         do {
@@ -194,6 +194,8 @@ struct ContentView: View {
             let musicAuthorizationStatus = await MusicAuthorization.request()
             // 認証されなかったら
             guard musicAuthorizationStatus == .authorized else {
+                // アプリ設定画面への遷移
+                await UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
                 // 処理終了　なにもしない
                 print("許可されませんでした")
                 // 何も返さず終了
@@ -204,7 +206,8 @@ struct ContentView: View {
             // レスポンスを取得
             let response = try await request.response()
             // 曲とプレビューURLが存在する場合
-            if let song = response.items.first, let previewURL = song.previewAssets?.first?.url {
+            if let song = response.items.first,
+               let previewURL = song.previewAssets?.first?.url {
                 // previewURLに代入
                 self.previewURL = previewURL
             } // if let
