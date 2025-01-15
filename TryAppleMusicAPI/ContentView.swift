@@ -53,6 +53,8 @@ struct ContentView: View {
     // fadeOutを修了するタイマー
     @State private var fadeOutEndTimer: Timer?
     //<iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/jp/album/%E9%8A%80%E6%B2%B3%E9%89%84%E9%81%93999/477643015?i=477643022"></iframe>
+    // 設定画面へ誘導するアラート
+    @State private var isShowAlert = false
     private let iD: String = "477643022"
     var body: some View {
         VStack {
@@ -104,8 +106,21 @@ struct ContentView: View {
                     .foregroundColor(.white)
                     .cornerRadius(10)
                 }
-            }
-        }
+            } // if isLoading
+        } // VStack
+        .alert(isPresented: $isShowAlert) {
+                    Alert(
+                        title: Text("メディアとApple Musicへのアクセスがオフになっています"),
+                        message: Text("この機能を使うにはメディアとApple Musicへのアクセスをオンにしてください。設定アプリで変更できます。"),
+                        primaryButton: .default(Text("設定を開く")) {
+                            // 設定アプリの自分のアプリの設定画面を開く
+                            if let url = URL(string: UIApplication.openSettingsURLString) {
+                                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                            }
+                        },
+                        secondaryButton: .cancel(Text("キャンセル"))
+                    )
+                }
         .onAppear {
             stopTimer()
             elapsedTime = Double(selectedTime * 60)
@@ -113,7 +128,7 @@ struct ContentView: View {
         } // .onAppear
         .onChange(of: selectedTime) {
             elapsedTime = Double(selectedTime * 60)
-        }
+        } // .onChange
         // 再生完了（音量0）の通知を受け取る
         .onReceive(NotificationCenter.default.publisher(for: notificationName)) { _ in
             print("音量が0になりました。再度再生をします")
@@ -166,14 +181,14 @@ struct ContentView: View {
                     print("プレイヤーがnilです")
                 }
             }
-        }
+        }// selectedTimer
         
-    }
+    } // startTimer
     
     func stopTimer() {
         selectedTimer?.invalidate()
         selectedTimer = nil
-    }
+    } // stopTimer
     
     // 状態更新
     func updateState(newState: Status) {
@@ -194,11 +209,10 @@ struct ContentView: View {
             let musicAuthorizationStatus = await MusicAuthorization.request()
             // 認証されなかったら
             guard musicAuthorizationStatus == .authorized else {
-                // アプリ設定画面への遷移
-                await UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
+                // アラート表示
+                isShowAlert = true
                 // 処理終了　なにもしない
                 print("許可されませんでした")
-                // 何も返さず終了
                 return
             }
             // 楽曲IDを指定してリクエストを作成
