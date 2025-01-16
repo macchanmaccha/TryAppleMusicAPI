@@ -52,10 +52,10 @@ struct ContentView: View {
     @State private var fadeOutTimer: Timer?
     // fadeOutを修了するタイマー
     @State private var fadeOutEndTimer: Timer?
-    // https://music.apple.com/jp/album/%E3%83%81%E3%83%99%E3%83%83%E3%83%88%E3%83%9C%E3%82%A6%E3%83%AB/1578292178?i=1578292191
+//    <iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/jp/album/%E9%8A%80%E6%B2%B3%E9%89%84%E9%81%93999/477643015?i=477643022"></iframe>
     // 設定画面へ誘導するアラート
     @State private var isShowAlert = false
-    private let iD: String = "1578292191"
+    private let iD: String = "477643022"
     var body: some View {
         VStack {
             // isLoadingがtrueなら
@@ -163,7 +163,7 @@ struct ContentView: View {
                     // それ以外なら
                 } else {
                     // 音量が0になったら再生
-                    togglePlayback()
+                    playBack()
                 }
             } // if let endTime...
         } // .onReceive
@@ -172,7 +172,7 @@ struct ContentView: View {
         // 終了時刻を計算
         endTime = Date(timeInterval: TimeInterval(selectedTime * 60), since: Date())
         // 再生を開始
-        togglePlayback()
+        playBack()
         // タイマーを開始
         startTimer()
         print("タイマーは\(endTime!)で終わり")
@@ -253,31 +253,34 @@ struct ContentView: View {
             return
         }
     } // fetchPreciewURL
-    // 曲を再生したり、停止したりするメソッド
-    private func togglePlayback() {
+    // 曲を再生するメソッド
+    private func playBack() {
         // previewURLが存在しなかったら何もしない
         guard let previewURL = previewURL else {
             // プレビューURLが存在しなかったらコメント
             print("previewURLが存在しません")
             return
         }
-        print("⭐️previewURLはこちら\(previewURL)")
-        // isPlayingがtrueなら
-        if isPlaying {
-            // ポーズにする
-            player?.pause()
-            // isPlayingをfalseにする
-            isPlaying = false
-            // true以外なら
+        // playerにpreviewUrlを代入する
+        player = AVPlayer(url: previewURL)
+        // 再生する
+        player?.play()
+        // isPlayingをtrueにする
+        isPlaying = true
+        // フェードイン
+        fadeIn(player: player!, duration: 5)
+        // フェードアウト
+        // endTimeから5秒前は必ずフェードアウト
+        if let endTime = endTime, Date() >= endTime - 5 {
+            fadeOut(player: player!, duration: 5.0)
         } else {
-            // playerにpreviewUrlを代入する
-            player = AVPlayer(url: previewURL)
-            // 再生する
-            player?.play()
-            // isPlayingをtrueにする
-            isPlaying = true
-        }
-    } // func togglePlayback()
+            fadeOutEndTimer = Timer.scheduledTimer(withTimeInterval: 25.0, repeats: false) { _ in
+                // 5秒かけてフェードアウト
+                fadeOut(player: player!, duration: 5.0)
+            }
+            }
+        print("⭐️previewURLはこちら\(previewURL)")
+    } // func playBack()
     // 自然に聞こえるフェードイン
     func fadeIn(player: AVPlayer, duration: TimeInterval) {
         // もしisFadeOutがtrueになったら
