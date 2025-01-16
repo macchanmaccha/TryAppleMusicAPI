@@ -52,10 +52,10 @@ struct ContentView: View {
     @State private var fadeOutTimer: Timer?
     // fadeOutを修了するタイマー
     @State private var fadeOutEndTimer: Timer?
-    //<iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/jp/album/%E9%8A%80%E6%B2%B3%E9%89%84%E9%81%93999/477643015?i=477643022"></iframe>
+    // https://music.apple.com/jp/album/%E3%83%81%E3%83%99%E3%83%83%E3%83%88%E3%83%9C%E3%82%A6%E3%83%AB/1578292178?i=1578292191
     // 設定画面へ誘導するアラート
     @State private var isShowAlert = false
-    private let iD: String = "477643022"
+    private let iD: String = "1578292191"
     var body: some View {
         VStack {
             // isLoadingがtrueなら
@@ -79,58 +79,79 @@ struct ContentView: View {
                 .frame(height: 150)
                 Text("\(Int(elapsedTime))秒")
                 // プレビューURLがnilでない場合
-                if previewURL != nil {
-                    // ボタンを表示
-                    Button(action: {
-                        // 再生
-                        startPlayAndTimer()
-                    }) {
-                        // isPlayingがtrueのときは停止、falseのときは再生を表示
-                        Text(isPlaying ? "停止" : "再生")
-                            .foregroundColor(.white)
-                            .frame(width: 200, height: 50)
-                            .background(isPlaying ? Color.red : Color.blue)
-                            .cornerRadius(10)
-                    }
-                    // それ以外
-                } else {
-                    // Preview URLをとるよう表示
-                    Button("PreviewURLを取得する") {
-                        // fetchPreciewURLを非同期処理
-                        Task {
-                            await fetchPreviewURL(for: iD)
-                        }
-                    }
-                    .frame(width: 200, height: 50)
-                    .background(Color.green)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
+                //                if previewURL != nil {
+                // ボタンを表示
+                Button(action: {
+                    startPlayAndTimer()
+                }) {
+                    // isPlayingがtrueのときは停止、falseのときは再生を表示
+                    Text("再生")
+                        .foregroundColor(.white)
+                        .frame(width: 200, height: 50)
+                        .background(Color.blue)
+                        .cornerRadius(10)
                 }
+                // ボタンを表示
+                Button(action: {
+                    updateState(newState: .paused)
+                }) {
+                    // isPlayingがtrueのときは停止、falseのときは再生を表示
+                    Text("一時停止")
+                        .foregroundColor(.white)
+                        .frame(width: 200, height: 50)
+                        .background(Color.red)
+                        .cornerRadius(10)
+                }
+                // ボタンを表示
+                Button(action: {
+                    updateState(newState: .playing)
+                }) {
+                    // isPlayingがtrueのときは停止、falseのときは再生を表示
+                    Text("再開")
+                        .foregroundColor(.white)
+                        .frame(width: 200, height: 50)
+                        .background(Color.orange)
+                        .cornerRadius(10)
+                }
+                // それ以外
+                //                } else {
+                // Preview URLをとるよう表示
+                Button("PreviewURLを取得する") {
+                    // fetchPreciewURLを非同期処理
+                    Task {
+                        await fetchPreviewURL(for: iD)
+                    }
+                }
+                .frame(width: 200, height: 50)
+                .background(Color.green)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                //                }
             } // if isLoading
         } // VStack
         .alert(isPresented: $isShowAlert) {
-                    Alert(
-                        title: Text("メディアとApple Musicへのアクセスがオフになっています"),
-                        message: Text("この機能を使うにはメディアとApple Musicへのアクセスをオンにしてください。設定アプリで変更できます。"),
-                        primaryButton: .default(Text("設定を開く")) {
-                            // 設定アプリの自分のアプリの設定画面を開く
-                            if let url = URL(string: UIApplication.openSettingsURLString) {
-                                UIApplication.shared.open(url, options: [:], completionHandler: nil)
-                            }
-                        },
-                        secondaryButton: .cancel(Text("キャンセル"))
-                    )
-                }
+            Alert(
+                title: Text("メディアとApple Musicへのアクセスがオフになっています"),
+                message: Text("この機能を使うにはメディアとApple Musicへのアクセスをオンにしてください。設定アプリで変更できます。"),
+                primaryButton: .default(Text("設定を開く")) {
+                    // 設定アプリの自分のアプリの設定画面を開く
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                    }
+                },
+                secondaryButton: .cancel(Text("キャンセル"))
+            )
+        }
         .onAppear {
             stopTimer()
             elapsedTime = Double(selectedTime * 60)
-            print("はじまるよ！")
         } // .onAppear
         .onChange(of: selectedTime) {
             elapsedTime = Double(selectedTime * 60)
         } // .onChange
         // 再生完了（音量0）の通知を受け取る
         .onReceive(NotificationCenter.default.publisher(for: notificationName)) { _ in
+            isPlaying = false
             print("音量が0になりました。再度再生をします")
             // endTimeが存在し、endTimeが過去だったら
             if let endTime = endTime, Date() >= endTime {
