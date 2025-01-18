@@ -153,6 +153,7 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: notificationName)) { _ in
             isPlaying = false
             print("音量が0になりました。再度再生をします")
+            elapsedTime = Double(selectedTime * 60)
             // endTimeが存在し、endTimeが過去だったら
             if let endTime = endTime, Date() >= endTime {
             } else {
@@ -245,6 +246,7 @@ struct ContentView: View {
                let previewURL = song.previewAssets?.first?.url {
                 // previewURLに代入
                 self.previewURL = previewURL
+                print("previewURLの取得完了！")
             } // if let
             // エラーの場合
         } catch {
