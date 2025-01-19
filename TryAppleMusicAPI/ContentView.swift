@@ -82,7 +82,11 @@ struct ContentView: View {
                 //                if previewURL != nil {
                 // ボタンを表示
                 Button(action: {
-                    startPlayAndTimer()
+                    if previewURL != nil {
+                        startPlayAndTimer()
+                    } else {
+                        print("previewURLがないため再生できません")
+                    }
                 }) {
                     // isPlayingがtrueのときは停止、falseのときは再生を表示
                     Text("再生")
