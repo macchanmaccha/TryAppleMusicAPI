@@ -157,7 +157,12 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: notificationName)) { _ in
             isPlaying = false
             print("音量が0になりました。再度再生をします")
-            elapsedTime = Double(selectedTime * 60)
+            // elapsedTimeが0秒になったら、秒数をselectedTime＊60にする
+            if elapsedTime == 0 {
+//                selectedTime = selectedTime == 0 ? 1 : selectedTime
+                elapsedTime = Double(selectedTime * 60)
+            }
+//
             // endTimeが存在し、endTimeが過去だったら
             if let endTime = endTime, Date() >= endTime {
             } else {
@@ -219,9 +224,11 @@ struct ContentView: View {
     // 状態更新
     func updateState(newState: Status) {
         if state == .playing && newState == .paused {
+            state = .paused
             player?.pause()
             stopTimer()
         } else if state == .paused && newState == .playing {
+            state = .playing
             player?.play()
             startTimer()
         }
