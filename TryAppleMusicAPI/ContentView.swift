@@ -50,6 +50,8 @@ struct ContentView: View {
     @State private var elapsedTime: TimeInterval = 0
     // 残り時間
     @State private var remainingTime: TimeInterval = 0
+    // fadeInを管理
+    @State private var isFadeIn = false
     // fadeOutを管理
     @State private var isFadeOut = false
     // fadeInのタイマー
@@ -88,7 +90,11 @@ struct ContentView: View {
                 // ボタンを表示
                 Button(action: {
                     if previewURL != nil {
-                        updateState(newState: .playing)
+//                        if state == .stopped {
+                            updateState(newState: .playing)
+//                        } else if state == .paused {
+//                            playBack()
+//                        }
                     } else {
                         print("previewURLがないため再生できません")
                     }
@@ -112,17 +118,6 @@ struct ContentView: View {
                         .cornerRadius(10)
                 }
                 .disabled(state == .paused)
-                //                // ボタンを表示
-                //                Button(action: {
-                //                    updateState(newState: .playing)
-                //                }) {
-                //                    Text("再開")
-                //                        .foregroundColor(.white)
-                //                        .frame(width: 200, height: 50)
-                //                        .background(Color.orange)
-                //                        .cornerRadius(10)
-                //                }
-                //                .disabled(isPlaying)
                 // Preview URLをとるよう表示
                 Button("PreviewURLを取得する") {
                     // fetchPreciewURLを非同期処理
@@ -151,40 +146,39 @@ struct ContentView: View {
             ) // Alert
         } // .alertここまで
         .onAppear {
-            stopTimer()
+            stopSelectedTimer()
+            stopFadeOutEndTimer()
             displayTime = Double(selectedTime * 60)
         } // .onAppear
         .onChange(of: selectedTime) {
             displayTime = Double(selectedTime * 60)
         } // .onChange
+        .onChange(of: displayTime) {
+            // displayTimeが5秒になったらフェードアウトをする
+            if displayTime >= 5 && displayTime < 6  {
+                // fadeOutEndTimerを無効にする
+                stopFadeOutEndTimer()
+                // フェードアウトする
+                fadeOut(player: player!, duration: 5)
+            } // if displayTime
+        }
         // 再生完了（音量0）の通知を受け取る
         .onReceive(NotificationCenter.default.publisher(for: notificationName)) { _ in
             print("音量が0になりました。")
-            // elapsedTimeが0秒になったら、秒数をselectedTime＊60にする
-            if displayTime == 0 {
-                displayTime = Double(selectedTime * 60)
-            }
-            // endTimeが存在し、endTimeが過去だったら
-            if let endTime = endTime, Date() >= endTime {
-                // 何もしない
-            } else if let endTime = endTime, Date() < endTime {
+            if let endTime = endTime, Date() < endTime && displayTime > 10 {
                 print("再度再生します。")
-                // endTimeが存在し、endTimeが現在よりも先のことだったら（終了時刻がまだきてなかったら）
-                // タイマー終了5秒前の間にplayBackを実行しないようにする処理
-                //                // isFadeOutがtrueなら
-                //                if isFadeOut == true {
-                //                    return
-                //                    // それ以外なら
-                //                } else {
                 // 音量が0になったら再生
                 playBack()
                 //                }
+            } else {
+                updateState(newState: .stopped)
             } // if let endTime...
         } // .onReceive
     } // body
     func startPlayAndTimer() {
         // 多重でタイマーを開始しないようにする
-        stopTimer()
+        stopSelectedTimer()
+        stopFadeOutEndTimer()
         // 終了時刻は、残り時間を考慮
         endTime = Date().addingTimeInterval(displayTime)
         print("終了時刻を計算すると\(endTime)")
@@ -200,7 +194,7 @@ struct ContentView: View {
         guard displayTime > 0 else {
             return
         }
-        isPlaying = true
+//        isPlaying = true
         if let endTime = endTime {
             selectedTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
                 // 現在時刻
@@ -211,8 +205,8 @@ struct ContentView: View {
                 print(displayTime)
                 // displayTimeが0以下のとき
                 if displayTime <= 0 {
-                    // タイマーが終了したら再生を停止
-                    stopTimer()
+                    // タイマーが終了したらタイマーとfadeOutTimerを停止
+                    stopSelectedTimer()
                 }
                 //                // フェードアウト
                 //                if let player = player {
@@ -225,12 +219,19 @@ struct ContentView: View {
         // 0.1秒ずつ刻む
     } // startTimer
     // func stopTimer
-    func stopTimer() {
-        fadeOutEndTimer?.invalidate()
-        fadeOutEndTimer = nil
+    func stopSelectedTimer() {
+        // selectedTimerを無効化
         selectedTimer?.invalidate()
+        // selectedTimerをnil
         selectedTimer = nil
     } // stopTimer
+    // func stopFadeOutEndTimer
+    func stopFadeOutEndTimer() {
+        // fadeOutEndTimerを無効化
+        fadeOutEndTimer?.invalidate()
+        // fadeOutEndTimerをnil
+        fadeOutEndTimer = nil
+    } // func stopFadeOutEndTimer
     // 状態更新
     func updateState(newState: Status) {
         // newStateが以下の状態となる場合
@@ -248,16 +249,20 @@ struct ContentView: View {
             // playerをnilに
             player = nil
             // タイマー停止
-            stopTimer()
-            // タイマー表示
-            displayTime = Double(selectedTime * 60)
+            stopSelectedTimer()
+            //
+            stopFadeOutEndTimer()
         case .paused:
             //
             isPlaying = false
             // 曲を一時停止
             player?.pause()
+            // playerをnil
+            player = nil
             // ストップ
-            stopTimer()
+            stopSelectedTimer()
+            //
+            stopFadeOutEndTimer()
         } // switch newState
         state = newState
     }
@@ -324,11 +329,12 @@ struct ContentView: View {
     } // func playBack()
     // 自然に聞こえるフェードイン
     func fadeIn(player: AVPlayer, duration: TimeInterval) {
-        // もしisFadeOutがtrueになったら
-        if isFadeOut {
+        // もしisFadeOutがtrueまたはdisplayTimeが10秒以下なら
+        if isFadeOut || displayTime <= 10 {
             // フェードインしない
             return
         }
+        isFadeIn = true
         let fadeDuration = duration
         // 100ミリ秒ごとに音量を変更
         let interval: TimeInterval = 0.1
@@ -345,14 +351,15 @@ struct ContentView: View {
                 // 最大音量に設定
                 player.volume = 1.0
                 timer.invalidate()
-            }
-        }
-    }
+            } // if
+        } // fadeInTimer
+    } // func fadeIn
     // 自然に聞こえるフェードアウト
     func fadeOut(player: AVPlayer, duration: TimeInterval) {
         print("🧡fadeOut関数をたたいたよ！")
         // フェードアウトしているとき
         if isFadeOut == true {
+            print("💚isFadeOutがtrueなので処理なし")
             // 何も処理しない
             return
         } // if isFadeOut...
