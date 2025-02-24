@@ -156,9 +156,9 @@ struct ContentView: View {
         } // .onChange
         .onChange(of: displayTime) {
             // displayTimeが5秒になったらフェードアウトをする
-            if displayTime >= 5 && displayTime < 6  {
-                // fadeOutEndTimerを無効にする
-                stopFadeOutEndTimer()
+            if displayTime >= 5 && displayTime < 5.1  {
+//                // fadeOutEndTimerを無効にする
+//                stopFadeOutEndTimer()
                 // フェードアウトする
                 fadeOut(player: player!, duration: 5)
             } // if displayTime
@@ -176,7 +176,7 @@ struct ContentView: View {
                 fadeOutEndTime = Date().addingTimeInterval(fadeOutTime)
                 // 音量が0になったら再生
                 playBack()
-            } else if let endTime = endTime, Date() < endTime && displayTime < 1 {
+            } else if let endTime = endTime, Date() > endTime && displayTime < 1 {
                 print("⚠️状態がストップになりました⚠️")
                 updateState(newState: .stopped)
             } else if let endTime = endTime, Date() < endTime && displayTime <= 10 && displayTime >= 1 {
@@ -336,7 +336,7 @@ struct ContentView: View {
             fadeOutTime = max(0, fadeOutEndTime.timeIntervalSince(now))
             print("❤️フェードアウトのタイマーは\(fadeOutTime)")
             // fadeOutEndTimeの5秒前になったら
-            if fadeOutTime >= 5 && fadeOutTime < 6 {
+            if fadeOutTime >= 5 && fadeOutTime < 5.1 {
                 // 5秒かけてフェードアウト
                 fadeOut(player: player!, duration: 5.0)
             } else if fadeOutTime < 5 && fadeOutTime > 0 {
