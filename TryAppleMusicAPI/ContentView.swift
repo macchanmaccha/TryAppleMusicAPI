@@ -60,11 +60,12 @@ struct ContentView: View {
     @State private var fadeOutTimer: Timer?
     // fadeOutを修了するタイマー
     @State private var fadeOutEndTimer: Timer?
-    //    <iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/jp/album/%E3%83%9C%E3%82%B5%E3%83%8E%E3%83%90%E3%82%AB%E3%83%95%E3%82%A7%E3%83%9F%E3%83%A5%E3%83%BC%E3%82%B8%E3%83%83%E3%82%AF/1521671966?i=1521671967"></iframe>
+//    <iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/jp/album/%E9%8A%80%E6%B2%B3%E9%89%84%E9%81%93999/477643015?i=477643022"></iframe>
     //    <iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/jp/album/%E7%B2%95%E6%AF%9B%E5%B7%9D-%E3%81%9B%E3%81%9B%E3%82%89%E3%81%8E/259872642?i=259872743"></iframe>
+    // <iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/jp/album/%E3%82%B5%E3%83%89%E3%82%A5%E3%83%B3%E3%83%AA%E3%83%BC-%E3%82%A2%E3%82%A4-%E3%82%B7%E3%83%BC/724916985?i=724917482"></iframe>
     // 設定画面へ誘導するアラート
     @State private var isShowAlert = false
-    private let iD: String = "259872743"
+    private let iD: String = "724917482"
     var body: some View {
         VStack {
             // isLoadingがtrueなら
@@ -90,11 +91,7 @@ struct ContentView: View {
                 // ボタンを表示
                 Button(action: {
                     if previewURL != nil {
-//                        if state == .stopped {
                             updateState(newState: .playing)
-//                        } else if state == .paused {
-//                            playBack()
-//                        }
                     } else {
                         print("previewURLがないため再生できません")
                     }
@@ -169,8 +166,10 @@ struct ContentView: View {
                 print("再度再生します。")
                 // 音量が0になったら再生
                 playBack()
-                //                }
-            } else {
+            } else if let endTime = endTime, Date() < endTime && displayTime <= 10 {
+                player?.volume = 0.3
+                player?.play()
+            } else if let endTime = endTime, Date() < endTime && displayTime == 0 {
                 updateState(newState: .stopped)
             } // if let endTime...
         } // .onReceive
@@ -178,10 +177,10 @@ struct ContentView: View {
     func startPlayAndTimer() {
         // 多重でタイマーを開始しないようにする
         stopSelectedTimer()
-        stopFadeOutEndTimer()
+//        stopFadeOutEndTimer()
         // 終了時刻は、残り時間を考慮
         endTime = Date().addingTimeInterval(displayTime)
-        print("終了時刻を計算すると\(endTime)")
+        print("終了時刻を計算すると\(String(describing: endTime))")
         // 再生を開始
         playBack()
         // タイマーを開始
@@ -201,7 +200,6 @@ struct ContentView: View {
                 let now = Date()
                 // 現在時刻と終了時刻の差を評価し、0以上の値を返す
                 displayTime = max(0, endTime.timeIntervalSince(now))
-                //                print(endTime.timeIntervalSince(now))
                 print(displayTime)
                 // displayTimeが0以下のとき
                 if displayTime <= 0 {
@@ -257,12 +255,12 @@ struct ContentView: View {
             isPlaying = false
             // 曲を一時停止
             player?.pause()
-            // playerをnil
-            player = nil
+//            // playerをnil
+//            player = nil
             // ストップ
             stopSelectedTimer()
             //
-            stopFadeOutEndTimer()
+            fadeOutEndTimer?.invalidate()
         } // switch newState
         state = newState
     }
@@ -307,21 +305,23 @@ struct ContentView: View {
             print("previewURLが存在しません")
             return
         }
-        // playerにpreviewUrlを代入する
-        player = AVPlayer(url: previewURL)
-        // 再生する
-        player?.play()
-        //        // isPlayingをtrueにする
-        //        isPlaying = true
-        // フェードイン
-        fadeIn(player: player!, duration: 5)
+        // playerがnilのとき（初めての再生のとき）
+        if player == nil {
+            print("🙆新しいプレーヤーを取得しました！")
+            // playerにpreviewUrlを代入する
+            player = AVPlayer(url: previewURL)
+            // 再生する
+            player?.play()
+            // フェードイン
+            fadeIn(player: player!, duration: 5)
+        } else {
+            // 再開したとき
+            // 再生するのみ
+            player?.play()
+        }
         // フェードアウト
-        //        // endTimeから5秒前は必ずフェードアウト
-        //        if state == .playing && Date() >= endTime - 5 {
-        //            fadeOut(player: player!, duration: 5.0)
-        //        } else if state == .playing && Date() < endTime - 5 {
         fadeOutEndTimer = Timer.scheduledTimer(withTimeInterval: 25.0, repeats: false) { _ in
-            print("❤️fadeOutTimer\(fadeOutEndTimer)")
+            print("❤️fadeOutTimer\(String(describing: fadeOutEndTimer))")
             // 5秒かけてフェードアウト
             fadeOut(player: player!, duration: 5.0)
         } // fadeOutEndTimer
@@ -351,6 +351,7 @@ struct ContentView: View {
                 // 最大音量に設定
                 player.volume = 1.0
                 timer.invalidate()
+                fadeInTimer = nil
             } // if
         } // fadeInTimer
     } // func fadeIn
@@ -379,6 +380,7 @@ struct ContentView: View {
                 // 音量をゼロに設定
                 player.volume = 0.0
                 player.pause()
+                self.player = nil
                 timer.invalidate()
                 isFadeOut = false
                 isPlaying = false
@@ -387,7 +389,6 @@ struct ContentView: View {
             } // if currentStep
         } // Timer
     } // func fadeOut
-    
 } // ContentView
 
 
