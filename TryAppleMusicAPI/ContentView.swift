@@ -253,6 +253,8 @@ struct ContentView: View {
             isPlaying = false
             // 曲を停止
             player?.pause()
+            // 30秒を入れ直す
+            fadeOutTime = 30.0
             // playerをnilに
             player = nil
             // タイマー停止
@@ -388,12 +390,15 @@ struct ContentView: View {
         let interval: TimeInterval = 0.1
         let totalSteps = Int(fadeDuration / interval)
         var currentStep = 0
+        
+        // 現在の音量を開始音量とする
+        let startVolume = player.volume
         fadeOutTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { timer in
             if currentStep < totalSteps {
                 // 音量の変更を指数関数的に調整
                 let normalizedTime = Double(currentStep) / Double(totalSteps)
                 // フェードインとは逆に音量が徐々に減少
-                player.volume = Float(pow(1.0 - normalizedTime, 2))
+                player.volume = Float(startVolume * pow(Float(1.0 - normalizedTime), 2))
                 currentStep += 1
             } else {
                 // 音量をゼロに設定
