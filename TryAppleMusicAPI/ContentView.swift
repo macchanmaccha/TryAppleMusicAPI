@@ -67,9 +67,10 @@ struct ContentView: View {
     //    <iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/jp/album/%E9%8A%80%E6%B2%B3%E9%89%84%E9%81%93999/477643015?i=477643022"></iframe>
     //    <iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/jp/album/%E7%B2%95%E6%AF%9B%E5%B7%9D-%E3%81%9B%E3%81%9B%E3%82%89%E3%81%8E/259872642?i=259872743"></iframe>
     // <iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/jp/album/%E3%82%B5%E3%83%89%E3%82%A5%E3%83%B3%E3%83%AA%E3%83%BC-%E3%82%A2%E3%82%A4-%E3%82%B7%E3%83%BC/724916985?i=724917482"></iframe>
+    //    <iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/jp/album/dream-more-live/1498708508?i=1498708754"></iframe>
     // 設定画面へ誘導するアラート
     @State private var isShowAlert = false
-    private let iD: String = "724917482"
+    private let iD: String = "1498708754"
     var body: some View {
         VStack {
             // isLoadingがtrueなら
@@ -106,6 +107,7 @@ struct ContentView: View {
                         .background(Color.blue)
                         .cornerRadius(10)
                 }
+                // isPlayingがtrueの時は再生ボタンを無効化
                 .disabled(isPlaying)
                 // ボタンを表示
                 Button(action: {
@@ -157,8 +159,8 @@ struct ContentView: View {
         .onChange(of: displayTime) {
             // displayTimeが5秒になったらフェードアウトをする
             if displayTime >= 5 && displayTime < 5.1  {
-//                // fadeOutEndTimerを無効にする
-//                stopFadeOutEndTimer()
+                //                // fadeOutEndTimerを無効にする
+                //                stopFadeOutEndTimer()
                 // フェードアウトする
                 fadeOut(player: player!, duration: 5)
             } // if displayTime
@@ -331,7 +333,10 @@ struct ContentView: View {
             // 再生するのみ
             player?.play()
         }
-        // フェードアウト
+        // 多重にfadeOutEndTimerが実行されないようにする
+        stopFadeOutEndTimer()
+        // isFadeOutEndTimerがfalseのとき
+        // フェードアウトする時間を管理するタイマー
         fadeOutEndTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
             // 現在時刻
             let now = Date()
@@ -390,7 +395,6 @@ struct ContentView: View {
         let interval: TimeInterval = 0.1
         let totalSteps = Int(fadeDuration / interval)
         var currentStep = 0
-        
         // 現在の音量を開始音量とする
         let startVolume = player.volume
         fadeOutTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { timer in
