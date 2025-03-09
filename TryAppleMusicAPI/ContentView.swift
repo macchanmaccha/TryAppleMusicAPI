@@ -54,7 +54,7 @@ struct ContentView: View {
     @State private var fadeOutTime: TimeInterval = 30.0
     /// fadeOutを終了するタイマー
     @State private var fadeOutEndTimer: Timer?
-
+    
     //    <iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/jp/album/%E7%B2%95%E6%AF%9B%E5%B7%9D-%E3%81%9B%E3%81%9B%E3%82%89%E3%81%8E/259872642?i=259872743"></iframe>
     /// 設定画面へ誘導するアラート
     @State private var isShowAlert = false
@@ -112,20 +112,6 @@ struct ContentView: View {
             // ボタンを無効にする条件
             // 再生状態がpauseのときや、stoppedのとき
             .disabled(state == .paused || state == .stopped)
-            // Preview URLを取得するボタン
-            Button("PreviewURLを取得する") {
-                // fetchPreciewURLを非同期処理
-                Task {
-                    await fetchPreviewURL(for: iD)
-                }
-            }
-            .frame(width: 200, height: 50)
-            .background(Color.green)
-            .foregroundColor(.white)
-            .cornerRadius(10)
-            // ボタンを無効にする条件
-            // previewURLが存在するとき
-            .disabled(previewURL != nil)
         } // VStack
         // AppleMusicへのアクセスが許可されなかった時に、設定画面への遷移を促すアラート
         .alert(isPresented: $isShowAlert) {
@@ -149,6 +135,9 @@ struct ContentView: View {
             stopFadeOutEndTimer()
             // displayTimeにユーザーが選択した分数✖️60秒の数を格納
             displayTime = Double(selectedTime * 60)
+            Task {
+                await fetchPreviewURL(for: iD)
+            }
         } // .onAppear
         // selectedTimeの変更を検知
         .onChange(of: selectedTime) {
@@ -328,14 +317,14 @@ struct ContentView: View {
     } // fetchPreciewURL
     // 曲を再生するメソッド
     private func playBack() {
-        // previewURLが存在しなかったら何もしない
+        // previewURL、endTime、fadeOutEndTimeが存在しなかったら
         guard let previewURL = previewURL,
-              let endTime = endTime,
+              let _ = endTime,
               let fadeOutEndTime = fadeOutEndTime else {
-            // プレビューURLが存在しなかったらコメント
             print("previewURLが存在しません")
+            // 処理終了
             return
-        }
+        } //guard let
         // playerがnilのとき（初めての再生のとき）
         if player == nil {
             print("🙆新しいプレーヤーを取得しました！")
@@ -354,7 +343,7 @@ struct ContentView: View {
             print("🌸一時停止した後の再開だよ！")
             // 再生するのみ
             player?.play()
-        }
+        } // if player
         // 多重にfadeOutEndTimerが実行されないようにする
         stopFadeOutEndTimer()
         // フェードアウトする時間を管理するタイマー
