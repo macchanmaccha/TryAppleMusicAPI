@@ -93,7 +93,7 @@ struct ContentView: View {
                 Text("再生")
                     .foregroundColor(.white)
                     .frame(width: 200, height: 50)
-                    .background(Color.blue)
+                    .background((previewURL != nil) && isPlaying == false && state != .playing && displayTime != 0 ? .blue : .gray)
                     .cornerRadius(10)
             }
             // previewURLがない時またはisPlayingがtrueの時または状態がstoppedかつdisplayTimeが0秒のとき再生ボタンを無効化
@@ -106,7 +106,7 @@ struct ContentView: View {
                 Text("一時停止")
                     .foregroundColor(.white)
                     .frame(width: 200, height: 50)
-                    .background(Color.red)
+                    .background(state == .playing ? .red : .gray)
                     .cornerRadius(10)
             } // Button
             // ボタンを無効にする条件
@@ -384,7 +384,6 @@ struct ContentView: View {
         var currentStep = 0
         // フェードインのタイマー
         fadeInTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { timer in
-            print("☕️プレイヤーの状態は\(player.status.rawValue)☕️")
             // 現在の段階が合計段階よりも小さいとき
             if currentStep < totalSteps {
                 // 音量の変更を指数関数的に調整
