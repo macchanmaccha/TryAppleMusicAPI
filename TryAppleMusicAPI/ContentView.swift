@@ -185,7 +185,7 @@ struct ContentView: View {
                 print("⚠️状態がストップになりました⚠️")
                 // 状態をstoppedにする
                 updateState(newState: .stopped)
-                // // endTimeが存在し、終了時刻が未到来でdisplayTimeが11より下かつ1より大きいとき
+                // // endTimeが存在し、終了時刻が到来済でdisplayTimeが11より下かつ1以上のとき
             } else if let endTime = endTime, Date() < endTime && displayTime < 11 && displayTime >= 1 {
                 print("🐻1~10のときの処理にはいってるよ！🐻")
                 return
