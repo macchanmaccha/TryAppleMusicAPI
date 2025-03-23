@@ -59,7 +59,7 @@ struct ContentView: View {
     /// 設定画面へ誘導するアラート
     @State private var isShowAlert = false
     /// 曲のID
-    private let trackID: String = "421780206"
+    private let trackID: String = "259872743"
     /// 再生ボタンの背景色
     private var playBackButtonBackground: Color {
         (previewURL != nil) && isPlaying == false && state != .playing && remainingTime != 0 ? .blue : .gray
