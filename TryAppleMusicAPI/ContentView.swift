@@ -473,7 +473,6 @@ struct ContentView: View {
                 // タイマーを無効に
                 fadeOutTimer?.invalidate()
                 // fadeOutTimerをnilに
-                
                 fadeOutTimer = nil
                 // フェードアウトが終わったら通知を送信
                 NotificationCenter.default.post(name: fadeOutNotification, object: nil)
