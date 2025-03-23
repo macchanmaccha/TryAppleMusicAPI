@@ -59,14 +59,14 @@ struct ContentView: View {
     /// 設定画面へ誘導するアラート
     @State private var isShowAlert = false
     /// 曲のID
-    private let trackID: String = "259872743"
+    private let trackID: String = "421780206"
     /// 再生ボタンの背景色
     private var playBackButtonBackground: Color {
         (previewURL != nil) && isPlaying == false && state != .playing && remainingTime != 0 ? .blue : .gray
     }
     /// 再生ボタンを非活性にする条件
     private var isPlayBackButtonDisabled: Bool {
-        // previewURLがない時またはisPlayingがtrueの時または状態がstoppedかつdisplayTimeが0秒のとき再生ボタンを無効化
+        // previewURLがない時またはisPlayingがtrueの時または状態がstoppedかつremainingTimeが0秒のとき再生ボタンを無効化
         previewURL == nil || isPlaying || state == .stopped && remainingTime == 0
     }
     /// 一時停止ボタンの背景色
@@ -149,7 +149,7 @@ struct ContentView: View {
             stopSelectedTimer()
             // fadeOutEndTimerを無効、nilに
             stopFadeOutEndTimer()
-            // displayTimeにユーザーが選択した分数✖️60秒の数を格納
+            // remainingTimeにユーザーが選択した分数✖️60秒の数を格納
             remainingTime = Double(selectedTime * 60)
             Task {
                 await fetchPreviewURL(for: trackID)
@@ -160,10 +160,10 @@ struct ContentView: View {
             // ユーザーが選択した分数✖️60秒の数を格納
             remainingTime = Double(selectedTime * 60)
         } // .onChange
-        // displayTimeの変更を検知
+        // remainingTimeの変更を検知
         .onChange(of: remainingTime) {
-            // displayTimeが5秒になったら必ずフェードアウトをする
-            // なお、displayTimeはTimeInterval型（Double型）のため、5.0〜5.1秒間で範囲指定
+            // remainingTimeが5秒になったら必ずフェードアウトをする
+            // なお、remainingTimeはTimeInterval型（Double型）のため、5.0〜5.1秒間で範囲指定
             if remainingTime >= 5.0 && remainingTime < 5.1  {
                 // playerが存在したら
                 if audioPlayer != nil {
@@ -175,37 +175,46 @@ struct ContentView: View {
                     stopFadeOutEndTimer()
                     // その後は処理終了とする
                     return
-                } // if displayTime
-                // displayTimeが0以下になったら
+                } // if remainingTime
+                // remainingTimeが0以下になったら
             } else if remainingTime <= 0 {
                 // 再生状態をstoppedにする
                 updateState(newState: .stopped)
-            }// if displayTime
-        } // .onChange(of: displayTime)
+            }// if remainingTime
+        } // .onChange(of: remainingTime)
         // 再生完了（音量0）の通知を受け取る
         .onReceive(NotificationCenter.default.publisher(for: fadeOutNotification)) { _ in
             print("音量が0になりました。")
-            // endTimeが存在し、終了時刻が未到来かつdisplayTimeが10より大きい時
-            if let endTime = endTime, Date() < endTime && remainingTime > 10 {
-                print("再度再生します。")
-                // fadeOutEndTimerを無効、nilにする
-                stopFadeOutEndTimer()
-                // fadeOutTimeに30を格納（30秒後をフェードアウト終了時間とするため）
-                fadeOutTime = 30
-                // fadeOutの終了時刻は、1行上で30を入れたfadeOutTimeを考慮
-                fadeOutEndTime = Date().addingTimeInterval(fadeOutTime)
-                // 再生
-                playBack()
-                // endTimeが存在し、終了時刻が未到来かつdisplayTimeが1より小さい時
-            } else if let endTime = endTime, Date() > endTime && remainingTime < 1 {
-                print("⚠️状態がストップになりました⚠️")
-                // 状態をstoppedにする
-                updateState(newState: .stopped)
-                // // endTimeが存在し、終了時刻が到来済でdisplayTimeが11より下かつ1以上のとき
-            } else if let endTime = endTime, Date() < endTime && remainingTime < 11 && remainingTime >= 1 {
-                print("🐻1~10のときの処理にはいってるよ！🐻")
+            // endTimeが存在しない場合は何もしない
+            guard let endTime else {
                 return
-            } // if let endTime...
+            }
+            // 終了時間が未到来の場合
+            if Date() < endTime {
+                // remainingTimeが10より大きい場合
+                if remainingTime > 10 {
+                    print("再度再生します。")
+                    // fadeOutEndTimerを無効、nilにする
+                    stopFadeOutEndTimer()
+                    // fadeOutTimeに30を格納（30秒後をフェードアウト終了時間とするため）
+                    fadeOutTime = 30
+                    // fadeOutの終了時刻は、1行上で30を入れたfadeOutTimeを考慮
+                    fadeOutEndTime = Date().addingTimeInterval(fadeOutTime)
+                    // 再生
+                    playBack()
+                    // remainingTimeが1以上11未満の場合
+                } else if remainingTime >= 1 && remainingTime < 11 {
+                    print("🐻1~10のときの処理にはいってるよ！🐻")
+                    return
+                }// if remainingTime > 10
+                // 終了時刻が到来済の場合
+            } else if Date() >= endTime {
+                if remainingTime < 1 {
+                    print("⚠️状態がストップになりました⚠️")
+                    // 状態をstoppedにする
+                    updateState(newState: .stopped)
+                }
+            }
         } // .onReceive
     } // body
     func startPlayAndTimer() {
@@ -226,24 +235,22 @@ struct ContentView: View {
     }
     
     func startTimer() {
-        // displayTimeが0よりも小さければ処理しない
-        guard remainingTime > 0 else {
+        // remainingTimeが0よりも小さく、endTimeが存在しなければ処理しない
+        guard remainingTime > 0, let endTime else {
             return
         }
-        if let endTime = endTime {
-            selectedDurationMinutes = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-                // 現在時刻
-                let now = Date()
-                // 現在時刻と終了時刻の差を評価し、0以上の値を返す
-                remainingTime = max(0, endTime.timeIntervalSince(now))
-                print(remainingTime)
-                // displayTimeが0以下のとき
-                if remainingTime <= 0 {
-                    // タイマーが終了したらタイマーとfadeOutTimerを停止
-                    stopSelectedTimer()
-                }
-            }// selectedTimer
-        } // if let
+        selectedDurationMinutes = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+            // 現在時刻
+            let now = Date()
+            // 現在時刻と終了時刻の差を評価し、0以上の値を返す
+            remainingTime = max(0, endTime.timeIntervalSince(now))
+            print(remainingTime)
+            // remainingTimeが0以下のとき
+            if remainingTime <= 0 {
+                // タイマーが終了したらタイマーとfadeOutTimerを停止
+                stopSelectedTimer()
+            }
+        }// selectedTimer
     } // startTimer
     // func stopTimer
     func stopSelectedTimer() {
@@ -334,9 +341,9 @@ struct ContentView: View {
     // 曲を再生するメソッド
     private func playBack() {
         // previewURL、endTime、fadeOutEndTimeが存在しなかったら
-        guard let previewURL = previewURL,
-              let _ = endTime,
-              let fadeOutEndTime = fadeOutEndTime else {
+        guard let previewURL,
+              let endTime,
+              let fadeOutEndTime else {
             print("previewURLが存在しません")
             // 処理終了
             return
@@ -369,21 +376,25 @@ struct ContentView: View {
             // fadeOutTimeはfadeOutEndTimeに向かって0.1秒スライスする　0と比較し、大きい値を格納
             fadeOutTime = max(0, fadeOutEndTime.timeIntervalSince(now))
             print("❤️フェードアウトのタイマーは\(fadeOutTime)")
-            // fadeOutEndTimeの5秒前になったら
-            if fadeOutTime >= 5 && fadeOutTime < 5.1 {
-                // 5秒かけてフェードアウト
-                fadeOut(player: audioPlayer!, duration: 5.0)
+            if fadeOutTime == 0 {
+                // 処理なし
+                return
+            } else if fadeOutTime > 0 && fadeOutTime < 5 {
                 // 0 < fadeOutTime < 5 のとき
-            } else if fadeOutTime < 5 && fadeOutTime > 0 {
+                print(fadeOutTime)
                 // 残り時間をかけてフェードアウト
                 fadeOut(player: audioPlayer!, duration: fadeOutTime)
-            } // if fadeOutTime
+            } else if fadeOutTime >= 5 && fadeOutTime < 5.1 {
+                // fadeOutEndTimeの5秒前になったら
+                // 5秒かけてフェードアウト
+                fadeOut(player: audioPlayer!, duration: 5.0)
+            } // if fadeOutTime...
         } // fadeOutEndTimer
         print("⭐️previewURLはこちら\(previewURL)")
     } // func playBack()
     // 自然に聞こえるフェードイン
     func fadeIn(player: AVPlayer, duration: TimeInterval) {
-        // もしisFadeOutがtrueまたはdisplayTimeが10秒以下なら
+        // もしisFadeOutがtrueまたはremainingTimeが10秒以下なら
         if isFadeIn || isFadeOut || remainingTime <= 10 {
             // フェードインしない
             return
