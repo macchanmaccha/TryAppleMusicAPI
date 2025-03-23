@@ -376,18 +376,19 @@ struct ContentView: View {
             // fadeOutTimeはfadeOutEndTimeに向かって0.1秒スライスする　0と比較し、大きい値を格納
             fadeOutTime = max(0, fadeOutEndTime.timeIntervalSince(now))
             print("❤️フェードアウトのタイマーは\(fadeOutTime)")
-            if fadeOutTime == 0 {
-                // 処理なし
-                return
+            // fadeOutEndTimeの5秒前になったら
+            if fadeOutTime >= 5 && fadeOutTime < 5.1 {
+                // 5秒かけてフェードアウト
+                fadeOut(player: audioPlayer!, duration: 5.0)
             } else if fadeOutTime > 0 && fadeOutTime < 5 {
                 // 0 < fadeOutTime < 5 のとき
                 print(fadeOutTime)
                 // 残り時間をかけてフェードアウト
                 fadeOut(player: audioPlayer!, duration: fadeOutTime)
-            } else if fadeOutTime >= 5 && fadeOutTime < 5.1 {
-                // fadeOutEndTimeの5秒前になったら
-                // 5秒かけてフェードアウト
-                fadeOut(player: audioPlayer!, duration: 5.0)
+            } else if fadeOutTime == 0 {
+                // fadeOutTimeが0のとき
+                // 処理なし
+                return
             } // if fadeOutTime...
         } // fadeOutEndTimer
         print("⭐️previewURLはこちら\(previewURL)")
