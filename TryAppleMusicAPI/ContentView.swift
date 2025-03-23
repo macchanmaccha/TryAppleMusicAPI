@@ -60,6 +60,24 @@ struct ContentView: View {
     @State private var isShowAlert = false
     /// 曲のID
     private let trackID: String = "259872743"
+    /// 再生ボタンの背景色
+    private var playBackButtonBackground: Color {
+        (previewURL != nil) && isPlaying == false && state != .playing && remainingTime != 0 ? .blue : .gray
+    }
+    /// 再生ボタンを非活性にする条件
+    private var isPlayBackButtonDisabled: Bool {
+        // previewURLがない時またはisPlayingがtrueの時または状態がstoppedかつdisplayTimeが0秒のとき再生ボタンを無効化
+        previewURL == nil || isPlaying || state == .stopped && remainingTime == 0
+    }
+    /// 一時停止ボタンの背景色
+    private var pauseButtonBackground: Color {
+        state == .playing ? .red : .gray
+    }
+    /// 一時停止ボタンを非活性にする条件
+    private var isPauseButtonDisabled: Bool {
+        // 再生状態がpauseのときや、stoppedのとき
+        state == .paused || state == .stopped
+    }
     var body: some View {
         VStack {
             // 音再生の時間を選択するPicker
@@ -93,11 +111,10 @@ struct ContentView: View {
                 Text("再生")
                     .foregroundColor(.white)
                     .frame(width: 200, height: 50)
-                    .background((previewURL != nil) && isPlaying == false && state != .playing && remainingTime != 0 ? .blue : .gray)
+                    .background(playBackButtonBackground)
                     .cornerRadius(10)
             }
-            // previewURLがない時またはisPlayingがtrueの時または状態がstoppedかつdisplayTimeが0秒のとき再生ボタンを無効化
-            .disabled(previewURL == nil || isPlaying || state == .stopped && remainingTime == 0)
+            .disabled(isPlayBackButtonDisabled)
             // 一時停止ボタン
             Button(action: {
                 // 再生状態をpausedに
@@ -106,12 +123,11 @@ struct ContentView: View {
                 Text("一時停止")
                     .foregroundColor(.white)
                     .frame(width: 200, height: 50)
-                    .background(state == .playing ? .red : .gray)
+                    .background(pauseButtonBackground)
                     .cornerRadius(10)
             } // Button
-            // ボタンを無効にする条件
-            // 再生状態がpauseのときや、stoppedのとき
-            .disabled(state == .paused || state == .stopped)
+            // ボタンを無効
+            .disabled(isPauseButtonDisabled)
         } // VStack
         // AppleMusicへのアクセスが許可されなかった時に、設定画面への遷移を促すアラート
         .alert(isPresented: $isShowAlert) {
