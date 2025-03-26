@@ -26,12 +26,8 @@ struct ContentView: View {
     @State private var state: PlaybackState = .stopped
     /// プレビューURL
     @State private var previewURL: URL?
-    /// 再生か停止かを管理
-    @State private var isPlaying = false
     /// プレイヤー
     @State private var audioPlayer: AVPlayer?
-    /// フェードアウトが終わった後の通知の名前
-    let fadeOutNotification = Notification.Name("fadeOutNotification")
     /// 初期値を1分とする
     @State private var selectedTime: Int = 1
     /// ユーザーが選択する時間のタイマー
@@ -42,9 +38,7 @@ struct ContentView: View {
     @State private var remainingTime: TimeInterval = 0
     /// fadeInを管理
     @State private var isFadeIn = false
-    /// fadeOutを管理
-    @State private var isFadeOut = false
-    /// fadeInのタイマー
+    /// fadeOutを管理isFadeOut
     @State private var fadeInTimer: Timer?
     /// fadeOutのタイマー
     @State private var fadeOutTimer: Timer?
@@ -58,16 +52,19 @@ struct ContentView: View {
     //    <iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/jp/album/%E7%B2%95%E6%AF%9B%E5%B7%9D-%E3%81%9B%E3%81%9B%E3%82%89%E3%81%8E/259872642?i=259872743"></iframe>
     /// 設定画面へ誘導するアラート
     @State private var isShowAlert = false
+    
+    /// フェードアウトが終わった後の通知の名前
+    private let fadeOutNotification = Notification.Name("fadeOutNotification")
     /// 曲のID
     private let trackID: String = "259872743"
     /// 再生ボタンの背景色
     private var playBackButtonBackground: Color {
-        (previewURL != nil) && isPlaying == false && state != .playing && remainingTime != 0 ? .blue : .gray
+        (previewURL != nil) && state != .playing && remainingTime != 0 ? .blue : .gray
     }
     /// 再生ボタンを非活性にする条件
     private var isPlayBackButtonDisabled: Bool {
-        // previewURLがない時またはisPlayingがtrueの時または状態がstoppedかつremainingTimeが0秒のとき再生ボタンを無効化
-        previewURL == nil || isPlaying || state == .stopped && remainingTime == 0
+        // previewURLがない時またはstateがplayingまたはstateがstoppedかつremainingTimeが0秒のとき再生ボタンを無効化
+        previewURL == nil || state == .playing || state == .stopped && remainingTime == 0
     }
     /// 一時停止ボタンの背景色
     private var pauseButtonBackground: Color {
@@ -202,8 +199,8 @@ struct ContentView: View {
                     fadeOutEndTime = Date().addingTimeInterval(fadeOutTime)
                     // 再生
                     playBack()
-                    // remainingTimeが1以上11未満の場合
-                } else if remainingTime >= 1 && remainingTime < 11 {
+                    // remainingTimeが1以上1O以下の場合
+                } else if remainingTime >= 1 && remainingTime <= 10 {
                     print("🐻1~10のときの処理にはいってるよ！🐻")
                     return
                 }// if remainingTime > 10
@@ -275,13 +272,9 @@ struct ContentView: View {
         switch newState {
             // 再生状態になったら
         case .playing:
-            // isPlayingをtrueに
-            isPlaying = true
             // startPlayAndTimerを実行
             startPlayAndTimer()
         case .stopped:
-            // isPlayingをfalseに
-            isPlaying = false
             // 曲を停止
             audioPlayer?.pause()
             // 30秒を入れ直す
@@ -293,8 +286,6 @@ struct ContentView: View {
             // fadeOutEndTimerを無効、nilにする
             stopFadeOutEndTimer()
         case .paused:
-            // isPlayingをfalseに
-            isPlaying = false
             // 曲を一時停止
             audioPlayer?.pause()
             // ストップ
@@ -340,9 +331,8 @@ struct ContentView: View {
     } // fetchPreviewURL
     // 曲を再生するメソッド
     private func playBack() {
-        // previewURL、endTime、fadeOutEndTimeが存在しなかったら
+        // previewURL、fadeOutEndTimeが存在しなかったら
         guard let previewURL,
-              let endTime,
               let fadeOutEndTime else {
             print("previewURLが存在しません")
             // 処理終了
@@ -402,12 +392,10 @@ struct ContentView: View {
         } // if isFadeIn
         // isFadeInをtrueに
         isFadeIn = true
-        // フェードインをする時間
-        let fadeDuration = duration
         // 100ミリ秒ごとに音量を変更
         let interval: TimeInterval = 0.1
         // 合計ステップ（フェードインをする時間が5なら、intervalが0.1なので段階は50）
-        let totalSteps = Int(fadeDuration / interval)
+        let totalSteps = Int(duration / interval)
         // 現在のステップ　初期は0
         var currentStep = 0
         // フェードインのタイマー
@@ -443,12 +431,10 @@ struct ContentView: View {
         } // if isFadeOut...
         // isFadeOutをtrueに
         isFadeOut = true
-        // フェードアウトをする時間
-        let fadeDuration = duration
         // フェードアウトは0.1刻み
         let interval: TimeInterval = 0.1
         // 合計ステップ（フェードアウトをする時間が5なら、intervalが0.1なので段階は50）
-        let totalSteps = Int(fadeDuration / interval)
+        let totalSteps = Int(duration / interval)
         // 現在のステップ　初期は0
         var currentStep = 0
         // 現在の音量を開始音量とする
