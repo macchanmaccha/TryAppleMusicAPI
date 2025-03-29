@@ -53,7 +53,7 @@ struct ContentView: View {
     /// fadeOutを終了するタイマー
     @State private var fadeOutEndTimer: Timer?
     
-    //    <iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/jp/album/%E7%B2%95%E6%AF%9B%E5%B7%9D-%E3%81%9B%E3%81%9B%E3%82%89%E3%81%8E/259872642?i=259872743"></iframe>
+    //    <iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="htthttps://github.com/CodeCandySchool/TryAppleMusicAPI_may/pull/5ps://embed.music.apple.com/jp/album/%E7%B2%95%E6%AF%9B%E5%B7%9D-%E3%81%9B%E3%81%9B%E3%82%89%E3%81%8E/259872642?i=259872743"></iframe>
     /// 設定画面へ誘導するアラート
     @State private var isShowAlert = false
     /// 曲のID
@@ -189,8 +189,8 @@ struct ContentView: View {
             }
             // 終了時間が未到来の場合
             if Date() < endTime {
-                // remainingTimeが10より大きい場合
-                if remainingTime > 10 {
+                // remainingTimeが10以上の場合
+                if remainingTime >= 10 {
                     print("再度再生します。")
                     // fadeOutEndTimerを無効、nilにする
                     stopFadeOutEndTimer()
