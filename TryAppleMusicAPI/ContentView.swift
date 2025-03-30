@@ -204,7 +204,7 @@ struct ContentView: View {
                 } else if remainingTime >= 1 && remainingTime < 10 {
                     print("🐻1~9のときの処理にはいってるよ！🐻")
                     return
-                }// if remainingTime > 10
+                } // if remainingTime >= 10
                 // 終了時刻が到来済の場合
             } else if Date() >= endTime {
                 if remainingTime < 1 {
