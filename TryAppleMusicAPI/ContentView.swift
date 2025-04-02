@@ -4,13 +4,9 @@
 //
 //  Created by apple on 2024/12/01.
 //
-
-import SwiftUI
-
 import SwiftUI
 import MusicKit
 import AVFoundation
-
 
 struct ContentView: View {
     /// 再生状態を管理する列挙体
@@ -53,19 +49,19 @@ struct ContentView: View {
     /// fadeOutを終了するタイマー
     @State private var fadeOutEndTimer: Timer?
     
-    //    <iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="htthttps://github.com/CodeCandySchool/TryAppleMusicAPI_may/pull/5ps://embed.music.apple.com/jp/album/%E7%B2%95%E6%AF%9B%E5%B7%9D-%E3%81%9B%E3%81%9B%E3%82%89%E3%81%8E/259872642?i=259872743"></iframe>
+    //    <iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://github.com/CodeCandySchool/TryAppleMusicAPI_may/pull/5ps://embed.music.apple.com/jp/album/%E7%B2%95%E6%AF%9B%E5%B7%9D-%E3%81%9B%E3%81%9B%E3%82%89%E3%81%8E/259872642?i=259872743"></iframe>
     /// 設定画面へ誘導するアラート
     @State private var isShowAlert = false
     /// 曲のID
     private let trackID: String = "259872743"
     /// 再生ボタンの背景色
-    private var playBackButtonBackground: Color {
+    private var playbackButtonBackground: Color {
         (previewURL != nil) && state != .playing && remainingTime != 0 ? .blue : .gray
     }
     /// 再生ボタンを非活性にする条件
     private var isPlayBackButtonDisabled: Bool {
         // previewURLがない時またはisPlayingがtrueの時または状態がstoppedかつremainingTimeが0秒のとき再生ボタンを無効化
-        previewURL == nil || state == .playing || state == .stopped && remainingTime == 0
+        previewURL == nil || state == .playing || (state == .stopped && remainingTime == 0)
     }
     /// 一時停止ボタンの背景色
     private var pauseButtonBackground: Color {
@@ -109,7 +105,7 @@ struct ContentView: View {
                 Text("再生")
                     .foregroundColor(.white)
                     .frame(width: 200, height: 50)
-                    .background(playBackButtonBackground)
+                    .background(playbackButtonBackground)
                     .cornerRadius(10)
             }
             .disabled(isPlayBackButtonDisabled)
@@ -199,7 +195,7 @@ struct ContentView: View {
                     // fadeOutの終了時刻は、1行上で30を入れたfadeOutTimeを考慮
                     fadeOutEndTime = Date().addingTimeInterval(fadeOutTime)
                     // 再生
-                    playBack()
+                    playback()
                     // remainingTimeが1以上10未満の場合
                 } else if remainingTime >= 1 && remainingTime < 10 {
                     print("🐻1~9のときの処理にはいってるよ！🐻")
@@ -226,7 +222,7 @@ struct ContentView: View {
         print("終了時刻を計算すると\(String(describing: endTime))")
         print("fadeOutEndTimeを計算すると\(String(describing: fadeOutEndTime))")
         // 再生を開始
-        playBack()
+        playback()
         // タイマーを開始
         startTimer()
         print("タイマーは\(endTime!)で終わり")
@@ -331,7 +327,7 @@ struct ContentView: View {
         } // do catch
     } // fetchPreviewURL
     // 曲を再生するメソッド
-    private func playBack() {
+    private func playback() {
         // previewURL、fadeOutEndTimeが存在しなかったら
         guard let previewURL,
               let fadeOutEndTime else {
@@ -383,7 +379,7 @@ struct ContentView: View {
             } // if fadeOutTime...
         } // fadeOutEndTimer
         print("⭐️previewURLはこちら\(previewURL)")
-    } // func playBack()
+    } // func playback()
     // 自然に聞こえるフェードイン
     func fadeIn(player: AVPlayer, duration: TimeInterval) {
         // もしisFadeOutがtrueまたはremainingTimeが10秒以下なら
