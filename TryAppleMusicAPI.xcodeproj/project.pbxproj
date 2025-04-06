@@ -68,6 +68,7 @@
 				183B038E2CFB678700CC3012 /* Sources */,
 				183B038F2CFB678700CC3012 /* Frameworks */,
 				183B03902CFB678700CC3012 /* Resources */,
+				18FCADED2DA27BE20028E59E /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -126,6 +127,27 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		18FCADED2DA27BE20028E59E /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 12;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "export PATH=\"$PATH:/opt/homebrew/bin\"\n\nif which swiftlint; then\n    swiftlint\nelse\n  echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		183B038E2CFB678700CC3012 /* Sources */ = {
@@ -267,6 +289,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"TryAppleMusicAPI/Preview Content\"";
 				DEVELOPMENT_TEAM = JL9HPDPZL7;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TryAppleMusicAPI/Info.plist;
 				INFOPLIST_KEY_NSAppleMusicUsageDescription = "";
@@ -298,6 +321,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"TryAppleMusicAPI/Preview Content\"";
 				DEVELOPMENT_TEAM = JL9HPDPZL7;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TryAppleMusicAPI/Info.plist;
 				INFOPLIST_KEY_NSAppleMusicUsageDescription = "";
