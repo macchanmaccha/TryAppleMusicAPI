@@ -19,6 +19,14 @@ Apple Music API（MusicKit）を使った再生まわりの検証用 SwiftUI ア
 - AVFoundation
 - Timer による再生時間・フェード制御
 
+## タイマーの流れ
+### セッション全体のタイマー（中断しない場合）
+<img width="1172" height="504" alt="セッション全体のタイマーの流れ（中断しない）" src="https://github.com/user-attachments/assets/7a503ce7-9103-4ce1-a0bb-e145da9783a6" />
+
+### セッション全体のタイマー（中断して再開する場合）
+<img width="1126" height="467" alt="セッション全体のタイマーの流れ（中断時）" src="https://github.com/user-attachments/assets/3de46e5e-8da8-4359-9b1c-0d8ecfef2256" />
+
+
 ## 関連プロジェクト
 
 - [Breath Trip](https://github.com/CodeCandySchool/MeditationJourney_may)
